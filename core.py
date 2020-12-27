@@ -1,6 +1,4 @@
-# import pandas as pd
-# from urllib.request import urlopen as uReq
-# from bs4 import BeautifulSoup as soup
+import pandas as pd
 import time, random, os, csv, datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -9,33 +7,47 @@ from selenium.webdriver.support.select import Select
 #import jsonl
 from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as soup
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import tojsonl
 
 
 class DataPirates:
 
     def __init__(self):
-        dirpath = os.getcwd ()
-        chromepath = dirpath + '/assets/chromedriver.exe'
 
-        # it will disable any unexpected notification
-        chrome_options = webdriver.ChromeOptions ()
-        prefs = {"profile.default_content_setting_values.notifications": 2}
-        chrome_options.add_experimental_option ("prefs", prefs)
-        self.driver = webdriver.Chrome (executable_path=chromepath, options=chrome_options)
+        self.driver = webdriver.Chrome(ChromeDriverManager().install())
 
         self.driver.get ('http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm')
 
-        # self.search()
+        self.search()
 
 
     def search(self):
+        try:
 
-        x = self.driver.find_element_by_xpath('//*[@id="Geral"]/div/div/span[2]/label/select')
-        x.click()
+            menu_uf = self.driver.find_element_by_xpath('//*[@id="Geral"]/div/div/span[2]/label/select')
+            time.sleep(random.uniform(2, 3))
 
-        #let's get AL (Alagoas)
-        select=Select(x)
-        select.select_by_value("AL")
+        except: #vamos inicializar  usando outro driver em caso de problemas
+            self.driver.quit()
+
+            print("We've got a problem with GoogleDriver! Let's try something even better")
+            self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
+
+            self.driver.get('http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm')
+            menu_uf = WebDriverWait(self.driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="Geral"]/div/div/span[2]/label/select')))
+
+        menu_uf.click()
+
+
+        #let's get AC
+        select=Select(menu_uf)
+        select.select_by_value("MG")
 
         self.driver.find_element_by_xpath('//*[@id="Geral"]/div/div/div[4]/input').click()
 
@@ -55,11 +67,53 @@ class DataPirates:
         # html parsing
         self.page_soup = soup(self.page_html, "html.parser")
 
-        table = self.driver.find_element_by_xpath('/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/table[2]')
+        #first page table
+        table = self.driver.find_element_by_xpath(
+            '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/table[2]')
+        #any other page
+        table1 = self.driver.find_element_by_xpath(
+            '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/table')
 
-        for row in table.find_elements_by_xpath('/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/table[2]/tbody'):
-            print(row.text)
+        self.raw_localidade = []
+        self.raw_faixa_cep = []
 
+        i=51
+        while i>=2:
+            for cidade in table.find_elements_by_xpath('.//tbody/tr[{0}]/td[1]'.format(i)):
+                self.raw_localidade.append(cidade.text)
+                for cep in table.find_elements_by_xpath('.//tbody/tr[{0}]/td[2]'.format(i)):
+                    self.raw_faixa_cep.append(cep.text)
+            i -= 1
+
+
+            #next_page different table
+        if len(self.raw_localidade)>47:
+            try: #ver se tem a opção de proxima página
+                self.driver.find_element_by_xpath('/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/a').click()
+                j = 51
+                while j >= 2:
+                    for cidade in table1.find_elements_by_xpath('.//tbody/tr[{0}]/td[1]'.format(j)):
+                        print(j)
+                        print(cidade.text)
+                        self.raw_localidade.append(cidade.text)
+                        # print(raw_localidade)
+                        for cep in table1.find_elements_by_xpath('.//tbody/tr[{0}]/td[2]'.format(j)):
+                            print(cep.text)
+                            self.raw_faixa_cep.append(cep.text)
+                    j -= 1
+
+            except:
+                print("There's not next page")
+                pass
+
+
+
+        print(self.raw_localidade)
+        print(self.raw_faixa_cep)
+        print(len(self.raw_localidade))
+
+
+        #self.driver.quit()
 
 teste = DataPirates()
 
