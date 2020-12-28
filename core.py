@@ -17,11 +17,12 @@ import tojsonl
 
 class DataPirates:
 
-    def __init__(self):
+    def __init__(self, url):
 
+        self.url = url
         self.driver = webdriver.Chrome(ChromeDriverManager().install())
 
-        self.driver.get ('http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm')
+        self.driver.get (url)
 
         self.search()
 
@@ -38,7 +39,7 @@ class DataPirates:
             print("We've got a problem with GoogleDriver! Let's try something even better")
             self.driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
 
-            self.driver.get('http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm')
+            self.driver.get(self.url)
             menu_uf = WebDriverWait(self.driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="Geral"]/div/div/span[2]/label/select')))
 
@@ -85,36 +86,49 @@ class DataPirates:
                     self.raw_faixa_cep.append(cep.text)
             i -= 1
 
+        proxima_pagina = '/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/a'
 
-            #next_page different table
-        if len(self.raw_localidade)>47:
-            try: #ver se tem a opção de proxima página
-                self.driver.find_element_by_xpath('/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/a').click()
-                j = 51
-                while j >= 2:
+        j = 49
+
+        while proxima_pagina is not None:
+            while j >= 2:
+                try:
+                    self.driver.find_element_by_xpath(proxima_pagina).click()
                     for cidade in table1.find_elements_by_xpath('.//tbody/tr[{0}]/td[1]'.format(j)):
                         print(j)
                         print(cidade.text)
                         self.raw_localidade.append(cidade.text)
-                        # print(raw_localidade)
                         for cep in table1.find_elements_by_xpath('.//tbody/tr[{0}]/td[2]'.format(j)):
                             print(cep.text)
                             self.raw_faixa_cep.append(cep.text)
                     j -= 1
 
-            except:
-                print("There's not next page")
-                pass
+                except:
+                    print("There's not next page")
+                    pass
 
-
+                finally:
+                    print(len(self.raw_localidade))
 
         print(self.raw_localidade)
         print(self.raw_faixa_cep)
-        print(len(self.raw_localidade))
+
 
 
         #self.driver.quit()
 
-teste = DataPirates()
+if __name__ == "__main__":
+
+    url = 'http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm'
+    ufs = ['MG', 'SC']
+
+    teste = DataPirates(url)
+    # for uf in ufs:
+    #     search(url, uf)
+
+#quando não tem proximapagina
+#/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]
+#quando tem
+#/html/body/div[1]/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/a
 
 
