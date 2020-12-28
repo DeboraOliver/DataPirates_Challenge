@@ -74,7 +74,6 @@ class DataPirates:
             while proxima_pagina is not None:
                 j = 51
                 while j >= 2:
-                    # try:
                     self.driver.find_element_by_xpath(proxima_pagina).click()
                     time.sleep(random.uniform(5.5, 6.5))
                     for local in table1.find_elements_by_xpath('.//tbody/tr[{0}]/td[1]'.format(j)):
@@ -86,9 +85,7 @@ class DataPirates:
                             print(ceps.text)
                             self.raw_faixa_cep.append(ceps.text)
                     j -= 1
-                    # except:
-                    #     print("There's not next page")
-                    #     break
+
         except:
             print("Não há próxima pagina")
             #NOVA PESQUISA
@@ -98,7 +95,7 @@ class DataPirates:
 if __name__ == "__main__":
 
     url = 'http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm'
-    ufs = ['AC','AP','DF', 'RR']
+    ufs = ['AC','AL','AP','DF', 'RR','SE']
 
     raw_localidade = []
     raw_faixa_cep = []
