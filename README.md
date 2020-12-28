@@ -1,28 +1,22 @@
 # Data Pirates challenge
 
-Here you are going to find my answer to the Neoway's technical test.
-
-
 ## Overview
 
+Here you are going to find my answer to the Neoway's technical test.
 
-## How to use it
+I developed this project using a Linux (debian10) OS. Nonetheless, the only difference, might be the pip freeze including a package called pkg-resources=0.0.0 which will not work.
+
+## How to run it
 
 Install a 3.x Python's version and Virtualenv:
 <ol>
 <li>Clone this repo : git clone https://github.com/DeboraOliver/DataPirates_Challenge.git</li>
 <li>Go to that cloned repo : cd DataPirates_Challenge</li>
-<li>Start a development environment: virtualenv --python $( which python3 ) py3;</li>
+<li>Start a development environment using virtualenv ;</li>
 <li>Install all dependencies : pip install -r requirements.txt;</li>
 </ol>
 
-## 1. Why am I using two scripts?
-
-It was a personal decision to turn thins clear and a little more organized.
-
-The first script named core.py uses a given url to access and collect data. The information collected (<i>localidade</i> and <i>faixa de cep</i>). The second script is called tojson.py. It simply transform the data in a dataframe and then, in a beautiful json file. Therefore, they complement one another.
-
-## 2. Requirements
+## 1. Requirements
 
 The main libraries used:
 
@@ -45,9 +39,33 @@ soupsieve==2.1
 urllib3==1.26.2
 webdriver-manager==3.2.2
 ````
-The tojson.py uses:
 
-```
+## 2. How does it collect data
 
-```
+A bot access a given url using selenium and the data collecting part is done by BeautifulSoup. T
+
+The last part is to gather information in only one dataframe and convert it to a jsonl file.
+
+## 3. Further questions
+
+### Why does it need to include time gaps between commands?
+To garanty enough time to page load, the scrip might have:
+  
+    time.sleep(random.uniform(2.5, 4.5))
+    
+But you may find:
+    
+    menu_uf = WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="Geral"]/div/div/span[2]/label/select')))
+
+### Why does it only use xpath where it might be good to use link?
+
+Xpath are highly changeable on social media and more popular websites. Due to the small risk of changes and the fact that this script is for a technical test, I personally decided to only use xpath, instead  of class/name/link.
+
+## References
+
+http://www.buscacep.correios.com.br/sistemas/buscacep/buscaFaixaCep.cfm
+http://jsonlines.org
+https://www.selenium.dev/exceptions/#stale_element_reference
+https://github.com/NeowayLabs/jobs/blob/master/datapirates/challengePirates.md
 
